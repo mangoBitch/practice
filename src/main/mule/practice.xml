@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="6d8c8bfb-238d-4ab1-8ff1-800175391a1e" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="011d7838-ae2f-4a44-8139-7bd855170ca0" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}"/>
+	</db:config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="a199e6ae-77e4-4baa-b447-9dacff1051ee" >
+		<vm:connection >
+			<reconnection />
+		</vm:connection>
+		<vm:queues >
+			<vm:queue queueName="qu" />
+		</vm:queues>
+	</vm:config>
+	<flow name="practiceFlow3" doc:id="cb6b822a-a8b8-42bc-8edd-60f29c0f263f" >
+		<http:listener doc:name="Listener" doc:id="8a07fbec-cf6f-4259-8bd5-73cc9e8c9815" config-ref="HTTP_Listener_config" path="/vm"/>
+		<set-payload value="payload" doc:name="Set Payload" doc:id="1885f253-ae77-4ffb-aca0-5651824c9c29" />
+		<set-variable value="var" doc:name="Set Variable" doc:id="9b6317d6-58e8-43a5-9f25-bc27c83b013f" variableName="var"/>
+		<vm:publish doc:name="Publish" doc:id="86d1db3c-6825-46ae-836c-924908fd038f" config-ref="VM_Config" queueName="qu"/>
+		<vm:publish-consume doc:id="a6a73435-ee79-495a-8164-ab8a6a6833c2" config-ref="VM_Config" queueName="qu" timeoutUnit="MINUTES"/>
+		<logger level="INFO" doc:name="Logger" doc:id="05eb906b-307f-4c46-97a7-a4ac0f4893f1" message='payload: #[payload] var:#[vars."var"]'/>
+	</flow>
+	<flow name="practiceFlow4" doc:id="b1a4d2d4-2ea9-446d-9c49-53d83ff0361b" >
+		<vm:listener queueName="qu" doc:name="Listener" doc:id="239b7cff-f957-4eeb-8102-012b6c303bbf" config-ref="VM_Config"/>
+		<set-payload value="payload_VM" doc:name="Set Payload" doc:id="523356d9-ced9-4a52-b479-a25930af5056" />
+		<set-variable value="var_VM" doc:name="Set Variable" doc:id="b748d595-19d5-469b-98c7-e9cfd3b31f96" variableName="var"/>
+	</flow>
+	<flow name="practiceFlow2" doc:id="8a1560c4-ec34-4a48-8996-2841e418b846" >
+		<http:listener doc:name="Listener" doc:id="616f3196-369a-4c49-926a-edae1c968173" config-ref="HTTP_Listener_config" path="/obj" allowedMethods="GET"/>
+		<set-payload value='#[{"a":{a1:"a1",b1:"b1"},"b":2}]' doc:name="Set Payload" doc:id="8593d3c1-f9c5-492b-878c-eca8691be9f4" />
+		<foreach doc:name="For Each" doc:id="8cc51893-22a8-4084-aaa8-21cf0efe2e3e" batchSize="2">
+			<logger level="INFO" doc:name="Logger" doc:id="39507c35-bbc0-4a5b-a164-c6d4ed913486" message="#[typeOf(payload)]"/>
+			<file:write doc:name="Write" doc:id="91b7c695-db32-4b90-b2b5-2244f3b33db8" config-ref="File_Config" path="input/example.csv" mode="APPEND">
+				<file:content ><![CDATA[#[output application/json --- payload]]]></file:content>
+			</file:write>
+		</foreach>
+	</flow>
+	<flow name="practiceFlow" doc:id="7905e0b4-1220-433d-9be8-6c702f0b4bae" >
+		<http:listener doc:name="Listener" doc:id="fdbd7de6-13b0-4ab5-b279-95dc7dd6f625" config-ref="HTTP_Listener_config" path="/t"/>
+		<set-payload value='#[output application/xml --- &#10;emp:{"a":1}]' doc:name="Set Payload" doc:id="72d61f44-fbf2-4eb2-bcde-c3ecb03c5402" />
+		<try doc:name="Try" doc:id="4614ce99-39d4-4c27-a55c-0ae2d23e4af5" >
+			<validation:is-blank-string doc:id="77130c74-07aa-4a81-bdc5-c01293646711" value="#[payload]"/>
+		</try>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d51c860e-f1cc-494c-9a40-f46000e05157" >
+				<set-payload value='"error in cont"' doc:name="Set Payload" doc:id="42f9b070-5340-4c16-8ef7-45428bfb0b37" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="practiceFlow1" doc:id="b586159f-bc7f-4430-890e-cb20f3c38cb6" >
+		<http:listener doc:name="Listener" doc:id="9019ddcc-e12c-4ea0-be99-0cfac183efd1" config-ref="HTTP_Listener_config" path="/pc"/>
+		<set-payload value="#[[10,2,30,4]]" doc:name="Set Payload" doc:id="f05cb2b5-0873-4aa9-9950-11864a57cb6b" />
+		<set-variable value="var" doc:name="Set Variable" doc:id="4b921ce0-4e2e-4dfd-9808-290363f8956c" variableName="variable"/>
+		<foreach doc:name="For Each" doc:id="e0157ab1-ab53-47bb-a631-efd5d0b25082" >
+			<ee:transform doc:name="Transform Message" doc:id="60b3fee6-5e7d-4480-ab82-ec35bfd824d0" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+---
+ payload wait payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="c13fb42b-8ca2-4bf9-b104-70bc7d52cd98" message="#[payload]"/>
+		</foreach>
+		<set-payload value="#[[5,6,7,8]]" doc:name="Set Payload" doc:id="e2b4b9c1-b252-400a-8113-b841aabc0c15" />
+		<batch:job jobName="practiceBatch_Job" doc:id="a2cff494-688c-43d9-baf1-1a5e20c7f00d">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="f9a155b0-d3b9-4ae4-946e-413fab4cbd18" acceptExpression="payload&gt;5">
+					<set-payload value='#[payload ++ "123"]' doc:name="Set Payload" doc:id="44de1f68-2bd4-484c-9728-8c29a0935650" />
+					<set-variable value='#["added"++ vars.variable]' doc:name="Set Variable" doc:id="1ca2482b-7872-4359-b124-8138fbc43b0e" variableName="variable"/>
+					<logger level="INFO" doc:name="Logger" doc:id="02ffa302-a0ea-4852-9341-fb0f31042d8d" message='logger1  #[payload]'/>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="7a8b2ef8-b6bb-47a0-8da8-def5f1e65a45" size="2">
+						<logger level="INFO" doc:name="Logger" doc:id="db57c606-9ab3-4d2d-bfdb-7c0dccf60bca" message='aggregator  #[payload]'/>
+					</batch:aggregator>
+				</batch:step>
+				<batch:step name="Batch_Step1" doc:id="f01b003e-cb87-4b26-8b86-2bb8ee21b160" acceptPolicy="ALL">
+					<logger level="INFO" doc:name="Logger" doc:id="f454a7f7-6d65-4d39-ad55-476f6d44f413" message="logger2  #[payload] var #[vars.variable]"/>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+		<set-variable value="var2" doc:name="Set Variable" doc:id="9b6a52e8-b039-45d8-b4e8-80670a2b63aa" variableName="var2"/>
+		<set-payload value="payload after batch job" doc:name="Set Payload" doc:id="98f51b0c-b4ed-4bfc-be73-c6ea67470ff3" />
+	</flow>
+	<flow name="12.1" doc:id="978eeb78-0d81-4aea-ab4f-a99f0a4ca803" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="d6638acf-ab90-4348-9c18-2ba6c4887ab3" config-ref="File_Config" directory="input" watermarkMode="MODIFIED_TIMESTAMP">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="035a3f02-f138-461c-8d8a-6fd735b7bd9c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="88f572b2-295f-44e3-960c-98bb852f2169" message="#[payload]"/>
+	</flow>
+	<flow name="manualWaterMark" doc:id="64608166-d749-42e2-b3f6-3799a090cb20" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="974c0175-a740-4956-96a4-56822baebbbd" >
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="Retrieve lastWM" doc:id="fb9d1c45-d208-48d4-8f03-769e11c09064" key="wm">
+			<os:default-value ><![CDATA[""]]></os:default-value>
+		</os:retrieve>
+		<db:select doc:name="Select" doc:id="0697d008-2e9f-42b1-aee5-07e919e02356" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * from accounts WHERE postal= :postal AND accountID >:lastAccountID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{postal : '343434',
+	lastAccountID:vars.lastAccountID
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Copy_of_Choice" doc:id="b22f46a7-76ec-4a7a-878a-8fba8decd595">
+			<when expression="#[not isEmpty(payload)]">
+				<os:store doc:name="Copy_of_lastAccountID" doc:id="4fbb33a0-8e1c-448f-bd8c-817fba666171" key="wm">
+					<os:value><![CDATA[#[max(payload.*accountID)]]]></os:value>
+				</os:store>
+				<file:write doc:name="Copy_of_DBaccountsWithPostal.csv" doc:id="f88d89a9-c82c-4f77-b38c-e187710f37c0" config-ref="File_Config" path="output/DBaccountsWithPostal.csv" mode="APPEND">
+					<file:content><![CDATA[#[output application/csv  header=false ---payload]]]></file:content>
+				</file:write>
+				<jms:publish doc:id="b1f6426d-b20f-4bae-9d38-43c75d43ea31" destination="accountsQ" doc:name="Copy_of_Publish" />
+				<logger level="INFO" doc:name="Copy_of_CSV payload" doc:id="744d2adc-1e63-4b3b-a763-4f9085b68f88" message="#[output application/csv --- payload]" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Copy_of_No New Record" doc:id="1ac4c484-5a39-427e-892c-d562fca49767" message="No New Record" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
