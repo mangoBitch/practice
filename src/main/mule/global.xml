@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="be7c447b-0239-44b2-b536-b9f70f5d65d3" >
+		<file:connection workingDir="C:\Users\mitalijchaudhary\Documents\mulesoft document\APDevFundamentals4.4_studentFiles_SP_05oct2021\APDevFundamentals4.4_studentFiles_SP_05oct2021\resources" />
+	</file:config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="bf5afb75-5948-408a-80f0-b54199f54e95" >
+		<jms:active-mq-connection />
+	</jms:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="2d479077-033e-4ca7-8ecc-f8102e2c04ea" file="config.yaml" />
+	<configuration doc:name="Configuration" doc:id="4737a936-972f-4f4c-8838-9aec71da318f" defaultErrorHandler-ref="globalError_Handler" />
+	<error-handler name="globalError_Handler" doc:id="fd197926-7053-4958-b10f-9e306b7425ba" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="78ff7aa0-7d3d-49d2-8667-117ef5e63af4" >
+			<set-payload value="gc" doc:name="Set Payload" doc:id="bbf6cb7e-6eca-48f8-986b-502c99be804f" />
+		</on-error-continue>
+	</error-handler>
+</mule>
